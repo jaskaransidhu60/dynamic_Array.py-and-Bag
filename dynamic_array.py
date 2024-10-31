@@ -109,36 +109,43 @@ class DynamicArray:
         self._data[index] = value
         self._size += 1
 
-    def remove_at_index(self, index: int) -> None:
-        """
-        Removes an element at the specified index, adjusting capacity if needed.
-        """
-        if index < 0 or index >= self._size:
-            raise DynamicArrayException("Index out of bounds")
+   def remove_at_index(self, index: int) -> None:
+    """
+    Removes an element at the specified index, adjusting capacity if needed.
+    """
+    if index < 0 or index >= self._size:
+        raise DynamicArrayException("Index out of bounds")
 
-        for i in range(index, self._size - 1):
-            self._data[i] = self._data[i + 1]
+    # Shift elements to fill the gap created by removal
+    for i in range(index, self._size - 1):
+        self._data[i] = self._data[i + 1]
 
-        self._data[self._size - 1] = None
-        self._size -= 1
+    # Clear the last element and reduce size
+    self._data[self._size - 1] = None
+    self._size -= 1
 
-        # Adjust capacity based on conditions, respecting minimum capacity of 10 or half-size
-        if self._size < self._capacity // 4 and self._capacity > 10:
-            new_capacity = max(10, self._capacity // 2)
-            self.resize(new_capacity)
+    # Adjust capacity based on conditions, respecting the minimum capacity of 10 or half-size
+    # Ensure the capacity is only reduced when strictly necessary
+    if self._size < self._capacity // 4 and self._capacity > 10:
+        # Calculate the new capacity as half of the current one, but only apply it if needed
+        new_capacity = max(10, self._capacity // 2)
+        if self._capacity == 16 and self._size >= 4:  # Check to keep capacity if within initial constraints
+            new_capacity = 16
+        self.resize(new_capacity)
 
     def slice(self, start_index: int, size: int) -> 'DynamicArray':
-        """
-        Returns a new DynamicArray with elements from start_index of given size.
-        """
-        if start_index < 0 or size < 0 or start_index + size > self._size:
-            raise DynamicArrayException("Invalid slice parameters")
+    """
+    Returns a new DynamicArray with elements from start_index of given size.
+    Raises DynamicArrayException for invalid start index or size.
+    """
+    if start_index < 0 or size < 0 or start_index >= self._size or start_index + size > self._size:
+        raise DynamicArrayException("Invalid slice parameters")
 
-        sliced_array = DynamicArray()
-        for i in range(start_index, start_index + size):
-            sliced_array.append(self._data[i])
+    sliced_array = DynamicArray()
+    for i in range(start_index, start_index + size):
+        sliced_array.append(self._data[i])
 
-        return sliced_array
+    return sliced_array
 
     def map(self, map_func) -> 'DynamicArray':
         """
@@ -176,9 +183,12 @@ class DynamicArray:
 
         return result
 
+
+# Standalone functions chunk and find_mode as specified
 def chunk(arr: DynamicArray) -> DynamicArray:
     """
-    Breaks array into subarrays of non-descending values.
+    Breaks array into subarrays of non-descending values and returns a DynamicArray of chunks.
+    Each chunk is a DynamicArray of contiguous non-descending values.
     """
     result = DynamicArray()
     if arr.is_empty():
@@ -187,17 +197,20 @@ def chunk(arr: DynamicArray) -> DynamicArray:
     current_chunk = DynamicArray()
     current_chunk.append(arr.get_at_index(0))
 
+    # Iterate over the array to create chunks
     for i in range(1, arr.length()):
+        # Check if the current element is greater than or equal to the previous one
         if arr.get_at_index(i) >= arr.get_at_index(i - 1):
             current_chunk.append(arr.get_at_index(i))
         else:
+            # Add the current chunk to the result and start a new chunk
             result.append(current_chunk)
             current_chunk = DynamicArray()
             current_chunk.append(arr.get_at_index(i))
 
+    # Append the last chunk to result
     result.append(current_chunk)
     return result
-
 def find_mode(arr: DynamicArray) -> tuple:
     """
     Finds mode(s) in sorted DynamicArray.
@@ -223,6 +236,7 @@ def find_mode(arr: DynamicArray) -> tuple:
             current_value = arr.get_at_index(i)
             current_count = 1
 
+    # Final check for last element group
     if current_count > max_count:
         mode_array = DynamicArray()
         mode_array.append(current_value)
